@@ -2,27 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Linear Midnight Surfaces */
+  --color-void: #08090a;       /* Canvas background */
+  --color-carbon: #0f1011;     /* Primary card / nav container */
+  --color-obsidian: #161718;   /* Elevated panels & dropdowns */
+  --color-slate: #23252a;      /* Interactive surface tint */
+
+  /* Hairline Borders */
+  --color-graphite: #23252a;   /* 1px subtle structural borders */
+  --color-smoke: #383b3f;      /* Higher-contrast dividers */
+
+  /* Typography Colors */
+  --color-paper: #ffffff;      /* Headings & maximum emphasis */
+  --color-bone: #e5e5e6;       /* High-contrast element fills */
+  --color-mist: #d0d6e0;       /* Body copy & button text */
+  --color-fog: #8a8f98;        /* Tertiary text & muted metadata */
+  --color-ash: #62666d;        /* Inactive icons & subtle labels */
+
+  /* Chromatic Accents */
+  --color-acid-lime: #e4f222;  /* Primary action CTA & active indicators */
+  --color-pulse-green: #27a644;
+  --color-coral-red: #eb5757;
+
+  /* Radii */
+  --radius-buttons: 6px;
+  --radius-inputs: 6px;
+  --radius-cards: 12px;
+  --radius-pills: 9999px;
+}
+
 @layer base {
-  body {
-    @apply bg-light-canvas text-slate-900 transition-colors duration-300;
-  }
-  
-  html.dark body {
-    @apply bg-dark-canvas text-slate-100;
+  * {
+    border-color: var(--color-graphite);
   }
 
-  /* Custom scrollbar for terminal/logs */
+  body {
+    background-color: var(--color-void);
+    color: var(--color-mist);
+    font-family: 'Inter', 'Inter Variable', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  code, kbd, samp, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* Linear Midnight scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full;
+    background: #23252a;
+    border-radius: 9999px;
   }
-  html.dark ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
+  ::-webkit-scrollbar-thumb:hover {
+    background: #383b3f;
   }
+}
+
+/* Linear Card Utilities */
+.linear-card {
+  background-color: var(--color-carbon);
+  border: 1px solid var(--color-graphite);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-cards);
+}
+
+.linear-btn-primary {
+  background-color: var(--color-acid-lime);
+  color: var(--color-void);
+  font-weight: 510;
+  border-radius: var(--radius-buttons);
+  transition: all 150ms ease;
+}
+.linear-btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 12px rgba(228, 242, 34, 0.25);
+}
+
+.linear-btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--color-graphite);
+  color: var(--color-mist);
+  font-weight: 500;
+  border-radius: var(--radius-buttons);
+  transition: all 150ms ease;
+}
+.linear-btn-secondary:hover {
+  background-color: var(--color-obsidian);
+  color: var(--color-paper);
+  border-color: var(--color-smoke);
 }

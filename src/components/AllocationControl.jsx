@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ALLOCATION_STRATEGIES } from '../hooks/useDiskEngine';
-import { Plus, RotateCw, AlertTriangle, BatteryCharging, Eraser } from 'lucide-react';
+import { Plus, RotateCw, AlertTriangle, BatteryCharging, RotateCcw } from 'lucide-react';
 
 export default function AllocationControl({ onAllocate, onDefragment, onClear, blocks }) {
   const [fileName, setFileName] = useState('');
@@ -17,17 +17,12 @@ export default function AllocationControl({ onAllocate, onDefragment, onClear, b
   };
 
   const handleFragmentationPreset = () => {
-    // Attempt to trigger external fragmentation
     onClear();
     setTimeout(() => {
       onAllocate('A', 5, ALLOCATION_STRATEGIES.CONTIGUOUS_FIRST_FIT);
       onAllocate('B', 3, ALLOCATION_STRATEGIES.CONTIGUOUS_FIRST_FIT);
       onAllocate('C', 4, ALLOCATION_STRATEGIES.CONTIGUOUS_FIRST_FIT);
       onAllocate('D', 2, ALLOCATION_STRATEGIES.CONTIGUOUS_FIRST_FIT);
-      
-      // Delete B and D to create holes of 3 and 2
-      // Then try to allocate size 5 -> should trigger Fragmentation
-      // We will do this via timeout so the engine state updates in sequence if needed
     }, 100);
   };
 
@@ -47,36 +42,41 @@ export default function AllocationControl({ onAllocate, onDefragment, onClear, b
   return (
     <div className="flex flex-col gap-6">
       
-      {/* Metrics */}
+      {/* Storage Usage Metric */}
       <div>
-        <div className="flex justify-between text-sm font-medium mb-2">
-          <span>Storage Usage</span>
-          <span>{usedBlocks} / {totalBlocks} ({usagePercentage}%)</span>
+        <div className="flex justify-between text-xs font-mono mb-2">
+          <span className="text-[#8a8f98]">CAPACITY USAGE</span>
+          <span className="text-[#ffffff] font-medium">{usedBlocks} / {totalBlocks} ({usagePercentage}%)</span>
         </div>
-        <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-[#161718] border border-[#23252a] rounded-full overflow-hidden">
           <div 
-            className="h-full bg-brand-violet transition-all duration-500 ease-out"
+            className="h-full bg-[#e4f222] transition-all duration-500 ease-out"
             style={{ width: `${usagePercentage}%` }}
           />
         </div>
       </div>
 
+      {/* Allocation Form */}
       <form onSubmit={handleAllocate} className="flex flex-col gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">File / Table Name</label>
+          <label className="block text-xs font-medium text-[#8a8f98] mb-1.5 uppercase tracking-wider">
+            File / Table Identifier
+          </label>
           <input 
             type="text" 
             required 
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-cyan focus:outline-none transition-shadow"
-            placeholder="e.g., Users.tbl"
+            className="w-full bg-[#161718] border border-[#23252a] text-[#ffffff] rounded-[6px] px-3 py-2 text-sm placeholder-[#62666d] focus:border-[#e4f222] focus:outline-none transition-colors"
+            placeholder="e.g. Users.tbl, Index_01"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Size (Blocks)</label>
+            <label className="block text-xs font-medium text-[#8a8f98] mb-1.5 uppercase tracking-wider">
+              Size (Blocks)
+            </label>
             <input 
               type="number" 
               required 
@@ -84,18 +84,20 @@ export default function AllocationControl({ onAllocate, onDefragment, onClear, b
               max="100"
               value={fileSize}
               onChange={(e) => setFileSize(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-cyan focus:outline-none transition-shadow"
+              className="w-full bg-[#161718] border border-[#23252a] text-[#ffffff] font-mono rounded-[6px] px-3 py-2 text-sm placeholder-[#62666d] focus:border-[#e4f222] focus:outline-none transition-colors"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Strategy</label>
+            <label className="block text-xs font-medium text-[#8a8f98] mb-1.5 uppercase tracking-wider">
+              Strategy
+            </label>
             <select 
               value={strategy}
               onChange={(e) => setStrategy(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-cyan focus:outline-none transition-shadow"
+              className="w-full bg-[#161718] border border-[#23252a] text-[#ffffff] rounded-[6px] px-3 py-2 text-sm focus:border-[#e4f222] focus:outline-none transition-colors"
             >
               {Object.values(ALLOCATION_STRATEGIES).map(s => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s} className="bg-[#161718] text-[#ffffff]">{s}</option>
               ))}
             </select>
           </div>
@@ -103,38 +105,48 @@ export default function AllocationControl({ onAllocate, onDefragment, onClear, b
 
         <button 
           type="submit"
-          className="w-full bg-brand-violet hover:bg-indigo-600 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-md mt-2"
+          className="w-full bg-[#e4f222] hover:brightness-105 active:scale-[0.99] text-[#08090a] font-[510] py-2 rounded-[6px] flex items-center justify-center gap-2 transition-all shadow-sm mt-1"
         >
-          <Plus size={18} /> Allocate Blocks
+          <Plus size={16} strokeWidth={2.5} />
+          <span>Allocate Blocks</span>
         </button>
       </form>
 
-      <hr className="border-light-border dark:border-dark-border" />
+      <div className="h-px bg-[#23252a]" />
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* Control Actions */}
+      <div className="grid grid-cols-2 gap-2.5">
         <button 
+          type="button"
           onClick={onDefragment}
-          className="bg-brand-emerald/10 hover:bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/30 font-medium py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+          className="bg-transparent hover:bg-[#161718] text-[#d0d6e0] hover:text-[#ffffff] border border-[#23252a] hover:border-[#383b3f] py-2 px-3 rounded-[6px] flex items-center justify-center gap-2 text-xs font-medium transition-all"
         >
-          <RotateCw size={16} /> Defragment
+          <RotateCw size={14} className="text-[#27a644]" />
+          <span>Defragment</span>
         </button>
         <button 
+          type="button"
           onClick={onClear}
-          className="bg-brand-rose/10 hover:bg-brand-rose/20 text-brand-rose border border-brand-rose/30 font-medium py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+          className="bg-transparent hover:bg-[#161718] text-[#eb5757] hover:text-[#eb5757] border border-[#23252a] hover:border-[#eb5757]/40 py-2 px-3 rounded-[6px] flex items-center justify-center gap-2 text-xs font-medium transition-all"
         >
-          <Eraser size={16} /> Factory Reset
+          <RotateCcw size={14} />
+          <span>Reset Disk</span>
         </button>
         <button 
+          type="button"
           onClick={handleFragmentationPreset}
-          className="col-span-2 bg-brand-warning/10 hover:bg-brand-warning/20 text-amber-600 dark:text-amber-500 border border-brand-warning/30 font-medium py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+          className="col-span-2 bg-transparent hover:bg-[#161718] text-[#d0d6e0] hover:text-[#ffffff] border border-[#23252a] hover:border-[#383b3f] py-2 px-3 rounded-[6px] flex items-center justify-center gap-2 text-xs font-medium transition-all"
         >
-          <AlertTriangle size={16} /> Preset: Trigger Fragmentation
+          <AlertTriangle size={14} className="text-[#e4f222]" />
+          <span>Preset: Simulate Fragmentation</span>
         </button>
         <button 
+          type="button"
           onClick={handleSaturationPreset}
-          className="col-span-2 bg-brand-cyan/10 hover:bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30 font-medium py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+          className="col-span-2 bg-transparent hover:bg-[#161718] text-[#d0d6e0] hover:text-[#ffffff] border border-[#23252a] hover:border-[#383b3f] py-2 px-3 rounded-[6px] flex items-center justify-center gap-2 text-xs font-medium transition-all"
         >
-          <BatteryCharging size={16} /> Preset: 90% Saturation
+          <BatteryCharging size={14} className="text-[#8a8f98]" />
+          <span>Preset: 90% Saturation</span>
         </button>
       </div>
       

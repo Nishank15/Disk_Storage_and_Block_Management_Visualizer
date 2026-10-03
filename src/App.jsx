@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import DiskGrid from './components/DiskGrid';
-import AllocationControl from './components/AllocationControl';
-import BitmapViewer from './components/BitmapViewer';
-import FileDirectory from './components/FileDirectory';
-import ExecutionLogs from './components/ExecutionLogs';
-import BenchmarkChart from './components/BenchmarkChart';
+import AllocatorPage from './pages/AllocatorPage';
+import StorageHardwarePage from './pages/StorageHardwarePage';
+import LearnPage from './pages/LearnPage';
+import PracticePage from './pages/PracticePage';
+import ExamsPage from './pages/ExamsPage';
+import CreditsPage from './pages/CreditsPage';
 import { useDiskEngine } from './hooks/useDiskEngine';
 import { generatePDFReport } from './utils/pdfReport';
 
@@ -14,6 +15,7 @@ export default function App() {
   const diskEngine = useDiskEngine();
 
   useEffect(() => {
+    // Keep dark mode class synced
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -28,65 +30,25 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <Navbar 
-          darkMode={darkMode} 
-          toggleTheme={toggleTheme} 
-          onDownloadPDF={handleDownloadPDF} 
-        />
-        
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Main Disk Section - 8 cols */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
-            <div className="bg-light-surface dark:bg-dark-surface rounded-3xl p-6 shadow-elevated border border-light-border dark:border-dark-border">
-              <h2 className="text-xl font-bold mb-4 font-sans text-brand-violet">Disk Storage (10x10)</h2>
-              <DiskGrid blocks={diskEngine.blocks} seekAnimation={diskEngine.seekAnimation} />
-            </div>
-            
-            <div className="bg-light-surface dark:bg-dark-surface rounded-3xl p-6 shadow-elevated border border-light-border dark:border-dark-border">
-              <h2 className="text-xl font-bold mb-4 font-sans text-brand-cyan">Free Space Bitmap</h2>
-              <BitmapViewer blocks={diskEngine.blocks} />
-            </div>
-          </div>
-
-          {/* Sidebar Section - 4 cols */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="bg-light-surface dark:bg-dark-surface rounded-3xl p-6 shadow-elevated border border-light-border dark:border-dark-border">
-              <h2 className="text-xl font-bold mb-4 font-sans text-brand-emerald">Allocation Control</h2>
-              <AllocationControl 
-                onAllocate={diskEngine.allocateFile} 
-                onDefragment={diskEngine.defragment}
-                onClear={diskEngine.clearDisk}
-                blocks={diskEngine.blocks}
-              />
-            </div>
-            
-            <div className="bg-light-surface dark:bg-dark-surface rounded-3xl p-6 shadow-elevated border border-light-border dark:border-dark-border flex-1 min-h-[300px]">
-              <h2 className="text-xl font-bold mb-4 font-sans text-brand-warning">File Directory</h2>
-              <FileDirectory 
-                files={diskEngine.files} 
-                onDelete={diskEngine.deleteFile}
-                onSeek={diskEngine.triggerSeekSimulation}
-              />
-            </div>
-          </div>
-          
-          {/* Bottom Row - Benchmark & Logs */}
-          <div className="lg:col-span-6 bg-light-surface dark:bg-dark-surface rounded-3xl p-6 shadow-elevated border border-light-border dark:border-dark-border">
-            <h2 className="text-xl font-bold mb-4 font-sans text-brand-rose">Seek Benchmark</h2>
-            <BenchmarkChart benchmarkData={diskEngine.benchmarkData} />
-          </div>
-
-          <div className="lg:col-span-6 bg-light-surface dark:bg-dark-surface rounded-3xl p-6 shadow-elevated border border-light-border dark:border-dark-border">
-            <h2 className="text-xl font-bold mb-4 font-sans text-slate-500 dark:text-slate-400">Execution Logs</h2>
-            <ExecutionLogs logs={diskEngine.logs} />
-          </div>
-
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#08090a] text-[#d0d6e0] flex flex-col font-sans selection:bg-[#e4f222]/20 selection:text-[#ffffff]">
+      <Navbar 
+        onDownloadPDF={handleDownloadPDF} 
+        darkMode={darkMode} 
+        toggleTheme={toggleTheme} 
+      />
+      
+      <main className="flex-1 w-full pb-12">
+        <Routes>
+          <Route path="/" element={<Navigate to="/allocator" replace />} />
+          <Route path="/allocator" element={<AllocatorPage diskEngine={diskEngine} />} />
+          <Route path="/storage-hardware" element={<StorageHardwarePage />} />
+          <Route path="/learn" element={<LearnPage diskEngine={diskEngine} onDownloadPDF={handleDownloadPDF} />} />
+          <Route path="/practice" element={<PracticePage />} />
+          <Route path="/exams" element={<ExamsPage />} />
+          <Route path="/credits" element={<CreditsPage />} />
+          <Route path="*" element={<Navigate to="/allocator" replace />} />
+        </Routes>
+      </main>
     </div>
   );
 }

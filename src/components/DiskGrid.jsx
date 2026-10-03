@@ -1,6 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import BlockCard from './BlockCard';
 
+const createBezierPath = (p1, p2) => {
+  const dx = p2.x - p1.x;
+  // Curve intensity based on distance
+  const cx1 = p1.x + dx * 0.2;
+  const cy1 = p1.y - 35;
+  const cx2 = p2.x - dx * 0.2;
+  const cy2 = p2.y - 35;
+  return `M ${p1.x},${p1.y} C ${cx1},${cy1} ${cx2},${cy2} ${p2.x},${p2.y}`;
+};
+
 export default function DiskGrid({ blocks, seekAnimation }) {
   const [hoveredFile, setHoveredFile] = useState(null);
   const [svgPaths, setSvgPaths] = useState([]);
@@ -59,25 +69,11 @@ export default function DiskGrid({ blocks, seekAnimation }) {
     setSvgPaths(paths);
   }, [hoveredFile, blocks]);
 
-  const createBezierPath = (p1, p2) => {
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    // Curve intensity based on distance
-    const cx1 = p1.x + dx * 0.2;
-    const cy1 = p1.y - 40;
-    const cx2 = p2.x - dx * 0.2;
-    const cy2 = p2.y - 40;
-    return `M ${p1.x},${p1.y} C ${cx1},${cy1} ${cx2},${cy2} ${p2.x},${p2.y}`;
-  };
-
   return (
     <div className="relative w-full" ref={gridRef}>
-      <div className="grid grid-cols-10 gap-2 md:gap-3">
+      <div className="grid grid-cols-10 gap-2 md:gap-2.5">
         {blocks.map((block) => {
           const isHovered = hoveredFile === block.fileId;
-          // Determine if this block is currently being seeked in animation
-          // The seekAnimation will be the file object. If it matches, we can light up the blocks in sequence.
-          // To keep it simple, we just highlight all blocks of the seeking file.
           const isSeekActive = seekAnimation && seekAnimation.name === block.fileId;
 
           return (
@@ -94,10 +90,10 @@ export default function DiskGrid({ blocks, seekAnimation }) {
       </div>
 
       {/* SVG Overlay for Vector Pointers */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+      <svg className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible">
         <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#06B6D4" />
+          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#e4f222" />
           </marker>
         </defs>
         {svgPaths.map((d, i) => (
@@ -105,11 +101,11 @@ export default function DiskGrid({ blocks, seekAnimation }) {
             key={i}
             d={d}
             fill="none"
-            stroke="#06B6D4"
-            strokeWidth="3"
-            strokeDasharray="5,5"
+            stroke="#e4f222"
+            strokeWidth="2"
+            strokeDasharray="4,4"
             markerEnd="url(#arrowhead)"
-            className="opacity-80 animate-pulse"
+            className="opacity-90 animate-pulse drop-shadow-[0_0_6px_rgba(228,242,34,0.4)]"
           />
         ))}
       </svg>

@@ -1,63 +1,71 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-export default function BenchmarkChart({ benchmarkData }) {
-  if (benchmarkData.length === 0) {
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
     return (
-      <div className="flex items-center justify-center h-48 text-slate-400">
-        <p className="text-sm">Allocate files to see benchmark data.</p>
+      <div className="bg-[#161718] border border-[#23252a] text-[#ffffff] p-3 rounded-[6px] shadow-xl text-xs font-mono">
+        <p className="font-bold text-[#ffffff] mb-1">{label}</p>
+        <p className="text-[#8a8f98]">Strategy: <span className="text-[#e4f222]">{data.strategy}</span></p>
+        <p className="text-[#8a8f98]">Seek Distance: <span className="text-[#ffffff] font-bold">{data.hops} hops</span></p>
       </div>
     );
   }
+  return null;
+};
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-slate-900 text-white p-3 rounded-lg shadow-xl border border-slate-700 text-xs">
-          <p className="font-bold mb-1">{label}</p>
-          <p>Strategy: <span className="text-brand-cyan">{data.strategy}</span></p>
-          <p>Seek Distance: <span className="text-brand-rose font-bold">{data.hops} hops</span></p>
-        </div>
-      );
-    }
-    return null;
-  };
+export default function BenchmarkChart({ benchmarkData }) {
+  if (benchmarkData.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-48 text-[#62666d]">
+        <p className="text-xs">Allocate files to generate seek distance benchmark data.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={benchmarkData}
-          margin={{ top: 20, right: 30, left: -20, bottom: 5 }}
+          margin={{ top: 15, right: 20, left: -25, bottom: 5 }}
         >
           <XAxis 
             dataKey="name" 
-            tick={{ fill: '#64748B', fontSize: 12 }} 
-            axisLine={{ stroke: '#334155' }}
+            tick={{ fill: '#8a8f98', fontSize: 11, fontFamily: 'JetBrains Mono' }} 
+            axisLine={{ stroke: '#23252a' }}
             tickLine={false}
           />
           <YAxis 
-            tick={{ fill: '#64748B', fontSize: 12 }} 
+            tick={{ fill: '#8a8f98', fontSize: 11, fontFamily: 'JetBrains Mono' }} 
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(100, 116, 139, 0.1)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }} />
           <Bar dataKey="hops" radius={[4, 4, 0, 0]}>
             {benchmarkData.map((entry, index) => {
-              // Color based on strategy
-              let color = '#6366F1'; // Default Contiguous
-              if (entry.strategy === 'Linked') color = '#F59E0B';
-              if (entry.strategy === 'Indexed') color = '#10B981';
+              let color = '#27a644'; // Contiguous
+              if (entry.strategy === 'Linked') color = '#f59e0b';
+              if (entry.strategy === 'Indexed') color = '#e4f222';
               return <Cell key={`cell-${index}`} fill={color} />;
             })}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      <div className="flex justify-center gap-4 mt-2 text-xs text-slate-500">
-        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#6366F1] rounded-sm"></div> Contiguous (1 hop)</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#F59E0B] rounded-sm"></div> Linked (N hops)</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#10B981] rounded-sm"></div> Indexed (N+1 hops)</div>
+      <div className="flex flex-wrap justify-center gap-6 mt-2 text-xs text-[#8a8f98]">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 bg-[#27a644] rounded-[2px]" />
+          <span>Contiguous (1 hop)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 bg-[#f59e0b] rounded-[2px]" />
+          <span>Linked (N hops)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 bg-[#e4f222] rounded-[2px]" />
+          <span>Indexed (N+1 hops)</span>
+        </div>
       </div>
     </div>
   );

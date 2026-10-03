@@ -1,75 +1,118 @@
-import React, { useState } from 'react';
-import { Moon, Sun, Download, BookOpen, HelpCircle, Users } from 'lucide-react';
-import LearnModal from './Modals/LearnModal';
-import HelpModal from './Modals/HelpModal';
-import DevelopedByModal from './Modals/DevelopedByModal';
+import React from 'react';
+import { NavLink, Link } from 'react-router-dom';
+import { Download, Moon, Sun } from 'lucide-react';
 
-export default function Navbar({ darkMode, toggleTheme, onDownloadPDF }) {
-  const [isLearnOpen, setIsLearnOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isDevelopedByOpen, setIsDevelopedByOpen] = useState(false);
+export default function Navbar({ onDownloadPDF, darkMode, toggleTheme }) {
+  const navItems = [
+    { name: 'Allocator', path: '/allocator' },
+    { name: 'Hardware & Tables', path: '/storage-hardware' },
+    { name: 'Learn', path: '/learn' },
+    { name: 'AI Practice', path: '/practice' },
+    { name: 'GATE / Exams', path: '/exams' },
+    { name: 'Contributors', path: '/credits' },
+  ];
 
   return (
-    <>
-      <nav className="bg-light-surface dark:bg-dark-surface rounded-2xl p-4 shadow-elevated border border-light-border dark:border-dark-border flex justify-between items-center transition-colors duration-300">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-violet rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-brand-violet/50">
-            DB
+    <header className="sticky top-0 z-50 w-full bg-[#08090a]/95 backdrop-blur-md border-b border-[#23252a]">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6 flex items-center justify-between h-14">
+        
+        {/* Brand Identity (Left) */}
+        <Link to="/allocator" className="flex items-center gap-3 shrink-0 group">
+          {/* Geometric Disk Glyph */}
+          <div className="w-7 h-7 rounded-[6px] bg-[#161718] border border-[#23252a] flex items-center justify-center text-[#ffffff] group-hover:border-[#e4f222]/50 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+              <path d="M3 12A9 3 0 0 0 21 12" />
+            </svg>
           </div>
-          <h1 className="text-xl font-bold font-sans tracking-tight">
-            Disk Storage Visualizer <span className="text-sm font-normal text-slate-500 hidden md:inline ml-2">DBMS Edition</span>
-          </h1>
-        </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <button 
-            onClick={() => setIsLearnOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <BookOpen size={18} className="text-brand-cyan" />
-            <span className="hidden md:inline font-medium text-sm">Learn</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-[510] tracking-[-0.022em] text-[#ffffff] font-sans">
+              StorageOS
+            </span>
+            <span className="hidden sm:inline-flex items-center bg-white/[0.05] text-[#8a8f98] text-[11px] font-mono rounded-full px-2 py-0.5 border border-[#23252a]">
+              DBMS / OS Edition
+            </span>
+          </div>
+        </Link>
 
-          <button 
-            onClick={() => setIsHelpOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <HelpCircle size={18} className="text-brand-emerald" />
-            <span className="hidden md:inline font-medium text-sm">Help</span>
-          </button>
+        {/* Navigation Links (Center) */}
+        <nav className="hidden lg:flex items-center gap-1 h-full">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `relative h-14 px-3 flex items-center text-xs font-medium transition-colors ${
+                  isActive 
+                    ? 'text-[#ffffff]' 
+                    : 'text-[#8a8f98] hover:text-[#d0d6e0]'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span>{item.name}</span>
+                  {isActive && (
+                    <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#e4f222] shadow-[0_0_8px_rgba(228,242,34,0.5)]" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
 
-          <button 
-            onClick={() => setIsDevelopedByOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <Users size={18} className="text-brand-rose" />
-            <span className="hidden md:inline font-medium text-sm">Credits</span>
-          </button>
-
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-
-          <button 
+        {/* Utility Actions (Right) */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          
+          {/* Download Report Button */}
+          <button
+            type="button"
             onClick={onDownloadPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg hover:opacity-90 transition-opacity font-medium text-sm shadow-md"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] border border-[#23252a] hover:border-[#383b3f] hover:bg-[#161718] text-[#d0d6e0] hover:text-[#ffffff] text-xs font-medium transition-all"
+            title="Download Audit PDF Report"
           >
-            <Download size={16} />
-            <span className="hidden md:inline">Report</span>
+            <Download size={13} className="text-[#8a8f98]" />
+            <span className="hidden sm:inline">Download Report</span>
+            <span className="sm:hidden">Report</span>
           </button>
 
-          <button 
-            onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Toggle Theme"
-          >
-            {darkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-slate-700" />}
-          </button>
+          {/* High-Contrast Theme / Mode Switch */}
+          {toggleTheme && (
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1.5 rounded-[6px] border border-[#23252a] hover:border-[#383b3f] hover:bg-[#161718] text-[#8a8f98] hover:text-[#ffffff] transition-colors"
+              aria-label="High contrast mode"
+              title="System Mode"
+            >
+              {darkMode ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+          )}
+
         </div>
-      </nav>
 
-      {/* Modals */}
-      <LearnModal isOpen={isLearnOpen} onClose={() => setIsLearnOpen(false)} />
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <DevelopedByModal isOpen={isDevelopedByOpen} onClose={() => setIsDevelopedByOpen(false)} />
-    </>
+      </div>
+
+      {/* Mobile Horizontal Sub-Navigation */}
+      <div className="lg:hidden flex items-center gap-2 px-4 py-1.5 overflow-x-auto border-t border-[#23252a]/60 bg-[#08090a] scrollbar-none">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `relative px-2.5 py-1 text-xs whitespace-nowrap rounded-[4px] font-medium transition-colors ${
+                isActive 
+                  ? 'text-[#ffffff] bg-[#161718] border border-[#23252a]' 
+                  : 'text-[#8a8f98] hover:text-[#d0d6e0]'
+              }`
+            }
+          >
+            {item.name}
+          </NavLink>
+        ))}
+      </div>
+    </header>
   );
 }
