@@ -1,8 +1,14 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Download, Moon, Sun } from 'lucide-react';
+import { useTheme } from '../context/useTheme';
 
-export default function Navbar({ onDownloadPDF, darkMode, toggleTheme }) {
+export default function Navbar({ onDownloadPDF, darkMode, toggleTheme: propToggleTheme }) {
+  const { isDark, toggleTheme } = useTheme();
+  
+  const activeIsDark = isDark ?? darkMode ?? true;
+  const activeToggle = toggleTheme || propToggleTheme;
+
   const navItems = [
     { name: 'Allocator', path: '/allocator' },
     { name: 'Hardware & Tables', path: '/storage-hardware' },
@@ -79,15 +85,15 @@ export default function Navbar({ onDownloadPDF, darkMode, toggleTheme }) {
           </button>
 
           {/* High-Contrast Theme / Mode Switch */}
-          {toggleTheme && (
+          {activeToggle && (
             <button
               type="button"
-              onClick={toggleTheme}
+              onClick={activeToggle}
               className="p-1.5 rounded-[6px] border border-[#23252a] hover:border-[#383b3f] hover:bg-[#161718] text-[#8a8f98] hover:text-[#ffffff] transition-colors"
-              aria-label="High contrast mode"
-              title="System Mode"
+              aria-label={activeIsDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={activeIsDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {darkMode ? <Sun size={15} /> : <Moon size={15} />}
+              {activeIsDark ? <Sun size={15} /> : <Moon size={15} />}
             </button>
           )}
 

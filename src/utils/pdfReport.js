@@ -1,29 +1,90 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+/**
+ * Generates an off-screen high-resolution Donut / Pie Chart image representing
+ * Allocated Blocks vs Available Free Blocks
+ */
+const generatePieChartImage = (usedBlocks, freeBlocks) => {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    const total = (usedBlocks + freeBlocks) || 1;
+    const usedAngle = (usedBlocks / total) * 2 * Math.PI;
+
+    // Background
+    ctx.fillStyle = '#0f1011';
+    ctx.fillRect(0, 0, 400, 400);
+
+    // Free wedge (Slate #23252a) - full circular base
+    ctx.beginPath();
+    ctx.moveTo(200, 200);
+    ctx.arc(200, 200, 150, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.fillStyle = '#23252a';
+    ctx.fill();
+
+    // Used wedge (Acid Lime #e4f222)
+    if (usedBlocks > 0) {
+      ctx.beginPath();
+      ctx.moveTo(200, 200);
+      // Start dial at top (-PI/2)
+      ctx.arc(200, 200, 150, -Math.PI / 2, -Math.PI / 2 + usedAngle);
+      ctx.closePath();
+      ctx.fillStyle = '#e4f222';
+      ctx.fill();
+    }
+
+    // Donut hole
+    ctx.beginPath();
+    ctx.arc(200, 200, 85, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0f1011';
+    ctx.fill();
+
+    // Center text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${Math.round((usedBlocks / total) * 100)}%`, 200, 190);
+    ctx.fillStyle = '#8a8f98';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('USED', 200, 225);
+
+    return canvas.toDataURL('image/png');
+  } catch (err) {
+    console.warn('Canvas pie chart generation failed:', err);
+    return null;
+  }
+};
+
 export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
   if (!diskEngine) {
     console.error('Cannot generate report: diskEngine is undefined');
     return;
   }
 
-  const { blocks = [], files = [], logs = [] } = diskEngine;
+  const { blocks = [], files = [], logs = [], diskDimension } = diskEngine;
 
   // Physical hardware parameters (defaults or passed via hardwareConfig)
-  const blockSizeBytes = hardwareConfig.blockSize || 4096;
+  const blockSizeBytes = hardwareConfig.blockSize || diskEngine.blockSize || 4096;
   const recordSizeBytes = hardwareConfig.recordSize || 128;
   const blockingFactor = Math.floor(blockSizeBytes / recordSizeBytes);
   const internalFragPerBlock = blockSizeBytes - (blockingFactor * recordSizeBytes);
 
+  const totalBlocks = blocks.length || 100;
+  const dimension = diskDimension || Math.round(Math.sqrt(totalBlocks)) || 10;
+  const usedBlocks = blocks.filter(b => b.status === 'allocated').length;
+  const freeBlocks = totalBlocks - usedBlocks;
+  const usagePercentage = Math.round((usedBlocks / totalBlocks) * 100);
+  const hasExternalFragmentation = freeBlocks > 0 && files.length > 0;
+
   try {
     const doc = new jsPDF();
-    
-    // Metrics calculations
-    const totalBlocks = blocks.length || 100;
-    const usedBlocks = blocks.filter(b => b.status === 'allocated').length;
-    const freeBlocks = totalBlocks - usedBlocks;
-    const usagePercentage = Math.round((usedBlocks / totalBlocks) * 100);
-    const hasExternalFragmentation = freeBlocks > 0 && files.length > 0;
     
     // Header & Metadata
     doc.setFontSize(16);
@@ -36,23 +97,63 @@ export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
     doc.text(`Course Curriculum     : DBMS / OS Physical Storage (CSE2004)`, 14, 34);
     doc.text(`Faculty Evaluator     : Dr. Swaminathan A (SCOPE)`, 14, 40);
     doc.text(`Authors / Engineers   : Nishank Chhipa (25BCE1642) & Shourya Sharma (25BCE1780)`, 14, 46);
+    doc.text(`Matrix Configuration  : ${dimension} × ${dimension} Grid (${totalBlocks} Blocks Total, ${blockSizeBytes}B / Block)`, 14, 52);
     
     // Horizontal hairline divider
     doc.setDrawColor(200, 205, 215);
-    doc.line(14, 50, 196, 50);
+    doc.line(14, 55, 196, 55);
 
     // ==========================================
     // SECTION 1: Active Disk Simulation Summary
     // ==========================================
     doc.setFontSize(12);
     doc.setTextColor(8, 9, 10);
-    doc.text('Section 1: Active Disk Simulation Summary', 14, 58);
+    doc.text('Section 1: Active Disk Simulation Summary', 14, 62);
+
+    // Generate & Embed Pie Chart Image
+    const chartImg = generatePieChartImage(usedBlocks, freeBlocks);
+    let summaryStartY = 66;
+
+    if (chartImg) {
+      try {
+        // Donut Chart Image (34 x 34 mm)
+        doc.addImage(chartImg, 'PNG', 14, 66, 34, 34);
+
+        // Side-by-side color legend
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+
+        // Filled box (#e4f222): Allocated
+        doc.setFillColor(228, 242, 34); // #e4f222 Acid Lime
+        doc.rect(54, 72, 4, 4, 'F');
+        doc.setTextColor(8, 9, 10);
+        doc.text(`Allocated (${usedBlocks} Blocks - ${usagePercentage}%)`, 61, 75.5);
+
+        // Filled box (#23252a): Available
+        doc.setFillColor(35, 37, 42); // #23252a Slate
+        doc.rect(54, 80, 4, 4, 'F');
+        doc.setTextColor(80, 85, 95);
+        doc.text(`Available (${freeBlocks} Blocks - ${100 - usagePercentage}%)`, 61, 83.5);
+
+        // Capacity Status subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 105, 115);
+        doc.text(`Total Physical Disk Space: ${totalBlocks} Blocks (${dimension}×${dimension} Logical Grid)`, 54, 91);
+        doc.text(`Capacity Status: ${usagePercentage > 80 ? 'High Utilization / Saturation Alert' : 'Optimal Capacity Allocation'}`, 54, 96);
+
+        summaryStartY = 104;
+      } catch (imgErr) {
+        console.warn('Could not embed pie chart image in PDF:', imgErr);
+        summaryStartY = 66;
+      }
+    }
     
     autoTable(doc, {
-      startY: 62,
+      startY: summaryStartY,
       head: [['Metric', 'Value', 'System Status / Diagnostic Notes']],
       body: [
-        ['Total Physical Blocks', `${totalBlocks} Blocks`, '10x10 Logical Matrix Addressing'],
+        ['Total Physical Blocks', `${totalBlocks} Blocks`, `${dimension}×${dimension} Logical Matrix Addressing`],
         ['Allocated Blocks', `${usedBlocks} Blocks`, `${usagePercentage}% Storage Saturation`],
         ['Available Free Blocks', `${freeBlocks} Blocks`, `${100 - usagePercentage}% Free Capacity`],
         ['Storage Utilization', `${usagePercentage}%`, usagePercentage > 80 ? 'High Utilization' : 'Optimal Capacity'],
@@ -61,7 +162,9 @@ export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
       ],
       theme: 'grid',
       headStyles: { fillColor: [22, 23, 24], textColor: [228, 242, 34], fontStyle: 'bold' },
-      styles: { fontSize: 8.5, cellPadding: 2.8 }
+      styles: { fontSize: 8.5, cellPadding: 2.4 },
+      pageBreak: 'auto',
+      showHead: 'everyPage'
     });
 
     // File Allocation Table (FAT)
@@ -97,19 +200,22 @@ export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
       body: fileData.length > 0 ? fileData : [['No files allocated in FAT', '-', '-', '-', '-', '-']],
       theme: 'striped',
       headStyles: { fillColor: [35, 37, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-      styles: { fontSize: 8, cellPadding: 2.5 }
+      styles: { fontSize: 8, cellPadding: 2.3 },
+      pageBreak: 'auto',
+      showHead: 'everyPage'
     });
 
     // ==========================================
-    // SECTION 2: Physical Hardware Architecture
+    // SECTION 2: Physical Hardware Architecture (Fresh Page)
     // ==========================================
-    const hwStartY = doc.lastAutoTable.finalY + 10;
+    doc.addPage();
+
     doc.setFontSize(12);
     doc.setTextColor(8, 9, 10);
-    doc.text('Section 2: Physical Hardware & DBMS Storage Architecture', 14, hwStartY);
+    doc.text('Section 2: Physical Hardware & DBMS Storage Architecture', 14, 20);
 
     autoTable(doc, {
-      startY: hwStartY + 4,
+      startY: 25,
       head: [['Hardware Architecture Parameter', 'Specification / Value', 'Pedagogical & DBMS Implication']],
       body: [
         ['Configured Block / Page Size (B)', `${blockSizeBytes} Bytes (${(blockSizeBytes / 1024).toFixed(1)} KB)`, 'Unit of I/O transfer between secondary disk and DBMS buffer pool'],
@@ -122,7 +228,9 @@ export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
       ],
       theme: 'grid',
       headStyles: { fillColor: [22, 23, 24], textColor: [228, 242, 34], fontStyle: 'bold' },
-      styles: { fontSize: 8, cellPadding: 2.6 }
+      styles: { fontSize: 8, cellPadding: 2.6 },
+      pageBreak: 'auto',
+      showHead: 'everyPage'
     });
 
     // New Page for Bitmap & Audit Trail
@@ -131,20 +239,22 @@ export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
     // Free Space Bitmap Snapshot
     doc.setFontSize(12);
     doc.setTextColor(8, 9, 10);
-    doc.text('Free Space Bitmap Vector Snapshot (1 = Free, 0 = Allocated)', 14, 20);
+    doc.text(`Free Space Bitmap Vector Snapshot (${dimension}×${dimension} Matrix, 1 = Free, 0 = Allocated)`, 14, 20);
     
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setFont('courier', 'normal');
     doc.setTextColor(60, 65, 75);
     const bitmapString = blocks.map(b => b.status === 'free' ? '1' : '0').join('');
     
-    const chunks = bitmapString.match(/.{1,10}/g) || [];
+    const chunks = bitmapString.match(new RegExp(`.{1,${dimension}}`, 'g')) || [];
     let y = 28;
-    for (let i = 0; i < chunks.length; i += 2) {
-      const rowLabel = `Blocks [${String(i * 10).padStart(2, '0')}-${String(Math.min((i + 2) * 10 - 1, 99)).padStart(2, '0')}]: `;
-      const bitRow = chunks.slice(i, i + 2).join('   ');
+    for (let i = 0; i < chunks.length; i++) {
+      const startIdx = i * dimension;
+      const endIdx = Math.min((i + 1) * dimension - 1, totalBlocks - 1);
+      const rowLabel = `Blocks [${String(startIdx).padStart(2, '0')}-${String(endIdx).padStart(2, '0')}]: `;
+      const bitRow = chunks[i].split('').join('   ');
       doc.text(rowLabel + bitRow, 14, y);
-      y += 5.5;
+      y += 5;
     }
 
     // ==========================================
@@ -163,13 +273,17 @@ export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
       body: logData.length > 0 ? logData : [['-', 'INITIALIZE', 'System initialized. No file allocation operations executed yet.']],
       theme: 'striped',
       styles: { fontSize: 7.5, cellPadding: 2.2 },
-      headStyles: { fillColor: [35, 37, 42], textColor: [228, 242, 34], fontStyle: 'bold' }
+      headStyles: { fillColor: [35, 37, 42], textColor: [228, 242, 34], fontStyle: 'bold' },
+      pageBreak: 'auto',
+      showHead: 'everyPage'
     });
 
     doc.save('StorageOS_Audit_Report.pdf');
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    alert('PDF Generation encountered an issue. Downloading fallback text audit report instead.');
+    if (typeof alert !== 'undefined') {
+      alert('PDF Generation encountered an issue. Downloading fallback text audit report instead.');
+    }
     
     // Fallback TXT Generation
     let txtContent = `========================================================================================\n`;
@@ -179,16 +293,15 @@ export const generatePDFReport = (diskEngine, hardwareConfig = {}) => {
     txtContent += `Course Curriculum     : DBMS / OS Physical Storage (CSE2004)\n`;
     txtContent += `Faculty Evaluator     : Dr. Swaminathan A (SCOPE)\n`;
     txtContent += `Authors / Engineers   : Nishank Chhipa (25BCE1642) & Shourya Sharma (25BCE1780)\n`;
-    txtContent += `Target Virtual Disk   : 100 Blocks Matrix (10x10 Logical Grid)\n\n`;
+    txtContent += `Target Virtual Disk   : ${totalBlocks} Blocks Matrix (${dimension}×${dimension} Logical Grid)\n\n`;
     
     txtContent += `----------------------------------------------------------------------------------------\n`;
     txtContent += `SECTION 1: ACTIVE DISK SIMULATION SUMMARY\n`;
     txtContent += `----------------------------------------------------------------------------------------\n`;
-    txtContent += `Total Physical Blocks : ${blocks.length}\n`;
-    const used = blocks.filter(b => b.status === 'allocated').length;
-    txtContent += `Allocated Blocks      : ${used} blocks (${Math.round((used / blocks.length) * 100)}% utilization)\n`;
-    txtContent += `Free Capacity         : ${blocks.length - used} blocks\n`;
-    txtContent += `External Frag Check   : ${used > 0 && blocks.length - used > 0 ? 'Detected / Potential (Compaction recommended)' : 'Zero fragmentation'}\n`;
+    txtContent += `Total Physical Blocks : ${totalBlocks} (${dimension}×${dimension})\n`;
+    txtContent += `Allocated Blocks      : ${usedBlocks} blocks (${usagePercentage}% utilization)\n`;
+    txtContent += `Free Capacity         : ${freeBlocks} blocks (${100 - usagePercentage}% free)\n`;
+    txtContent += `External Frag Check   : ${hasExternalFragmentation ? 'Detected / Potential (Compaction recommended)' : 'Zero fragmentation'}\n`;
     txtContent += `Active Files Count    : ${files.length}\n\n`;
 
     txtContent += `File Allocation Table (FAT):\n`;

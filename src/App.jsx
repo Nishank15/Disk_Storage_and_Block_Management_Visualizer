@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import AllocatorPage from './pages/AllocatorPage';
@@ -9,33 +9,18 @@ import ExamsPage from './pages/ExamsPage';
 import CreditsPage from './pages/CreditsPage';
 import { useDiskEngine } from './hooks/useDiskEngine';
 import { generatePDFReport } from './utils/pdfReport';
+import { ThemeProvider } from './context/ThemeContext';
 
-export default function App() {
-  const [darkMode, setDarkMode] = useState(true);
+function AppContent() {
   const diskEngine = useDiskEngine();
-
-  useEffect(() => {
-    // Keep dark mode class synced
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  const toggleTheme = () => setDarkMode(!darkMode);
 
   const handleDownloadPDF = () => {
     generatePDFReport(diskEngine);
   };
 
   return (
-    <div className="min-h-screen bg-[#08090a] text-[#d0d6e0] flex flex-col font-sans selection:bg-[#e4f222]/20 selection:text-[#ffffff]">
-      <Navbar 
-        onDownloadPDF={handleDownloadPDF} 
-        darkMode={darkMode} 
-        toggleTheme={toggleTheme} 
-      />
+    <div className="min-h-screen bg-[var(--color-void)] text-[var(--color-mist)] flex flex-col font-sans selection:bg-[#e4f222]/20 selection:text-[var(--color-paper)] transition-colors duration-150">
+      <Navbar onDownloadPDF={handleDownloadPDF} />
       
       <main className="flex-1 w-full pb-12">
         <Routes>
@@ -50,5 +35,13 @@ export default function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

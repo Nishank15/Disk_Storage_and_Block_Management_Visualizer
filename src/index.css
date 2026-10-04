@@ -2,26 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark Mode (Default) */
 :root {
-  /* Linear Midnight Surfaces */
-  --color-void: #08090a;       /* Canvas background */
-  --color-carbon: #0f1011;     /* Primary card / nav container */
-  --color-obsidian: #161718;   /* Elevated panels & dropdowns */
-  --color-slate: #23252a;      /* Interactive surface tint */
-
-  /* Hairline Borders */
-  --color-graphite: #23252a;   /* 1px subtle structural borders */
-  --color-smoke: #383b3f;      /* Higher-contrast dividers */
-
-  /* Typography Colors */
-  --color-paper: #ffffff;      /* Headings & maximum emphasis */
-  --color-bone: #e5e5e6;       /* High-contrast element fills */
-  --color-mist: #d0d6e0;       /* Body copy & button text */
-  --color-fog: #8a8f98;        /* Tertiary text & muted metadata */
-  --color-ash: #62666d;        /* Inactive icons & subtle labels */
-
-  /* Chromatic Accents */
-  --color-acid-lime: #e4f222;  /* Primary action CTA & active indicators */
+  --color-void: #08090a;
+  --color-carbon: #0f1011;
+  --color-obsidian: #161718;
+  --color-slate: #23252a;
+  --color-graphite: #23252a;
+  --color-smoke: #383b3f;
+  --color-paper: #ffffff;
+  --color-bone: #e5e5e6;
+  --color-mist: #d0d6e0;
+  --color-fog: #8a8f98;
+  --color-ash: #62666d;
+  --color-acid-lime: #e4f222;
   --color-pulse-green: #27a644;
   --color-coral-red: #eb5757;
 
@@ -30,6 +24,24 @@
   --radius-inputs: 6px;
   --radius-cards: 12px;
   --radius-pills: 9999px;
+}
+
+/* Crisp Light Mode */
+html.light {
+  --color-void: #f7f8f9;
+  --color-carbon: #ffffff;
+  --color-obsidian: #f0f2f5;
+  --color-slate: #e2e5e9;
+  --color-graphite: #e2e5e9;
+  --color-smoke: #cbd0d6;
+  --color-paper: #090a0b;
+  --color-bone: #18191b;
+  --color-mist: #24272c;
+  --color-fog: #525866;
+  --color-ash: #848b98;
+  --color-acid-lime: #c5d400; /* Darker lime for readability against light canvas */
+  --color-pulse-green: #1f8838;
+  --color-coral-red: #cf222e;
 }
 
 @layer base {
@@ -44,6 +56,7 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 150ms ease, color 150ms ease;
   }
 
   code, kbd, samp, pre, .font-mono {
@@ -59,11 +72,11 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #23252a;
+    background: var(--color-graphite);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #383b3f;
+    background: var(--color-smoke);
   }
 }
 
@@ -99,4 +112,100 @@
   background-color: var(--color-obsidian);
   color: var(--color-paper);
   border-color: var(--color-smoke);
+}
+
+/* Light Mode Overrides for Direct Color Literals */
+html.light body,
+html.light .bg-\[\#08090a\] {
+  background-color: var(--color-void) !important;
+}
+
+html.light .bg-\[\#08090a\]\/95 {
+  background-color: rgba(247, 248, 249, 0.95) !important;
+}
+
+html.light .bg-\[\#0f1011\] {
+  background-color: var(--color-carbon) !important;
+}
+
+html.light .bg-\[\#161718\] {
+  background-color: var(--color-obsidian) !important;
+}
+
+html.light .bg-\[\#161718\]\/40 {
+  background-color: rgba(240, 242, 245, 0.5) !important;
+}
+
+html.light .bg-\[\#121316\],
+html.light .bg-\[\#141518\],
+html.light .bg-\[\#1c1e22\] {
+  background-color: var(--color-obsidian) !important;
+}
+
+html.light .border-\[\#23252a\] {
+  border-color: var(--color-graphite) !important;
+}
+
+html.light .border-\[\#23252a\]\/60 {
+  border-color: rgba(226, 229, 233, 0.7) !important;
+}
+
+html.light .border-\[\#383b3f\] {
+  border-color: var(--color-smoke) !important;
+}
+
+html.light .text-\[\#ffffff\] {
+  color: var(--color-paper) !important;
+}
+
+html.light .text-\[\#d0d6e0\] {
+  color: var(--color-mist) !important;
+}
+
+html.light .text-\[\#8a8f98\] {
+  color: var(--color-fog) !important;
+}
+
+html.light .text-\[\#62666d\] {
+  color: var(--color-ash) !important;
+}
+
+html.light .text-\[\#e4f222\] {
+  color: var(--color-acid-lime) !important;
+}
+
+html.light .bg-\[\#e4f222\] {
+  background-color: var(--color-acid-lime) !important;
+  color: #090a0b !important;
+}
+
+html.light .hover\:bg-\[\#161718\]:hover {
+  background-color: var(--color-obsidian) !important;
+}
+
+html.light .hover\:border-\[\#383b3f\]:hover {
+  border-color: var(--color-smoke) !important;
+}
+
+html.light .hover\:text-\[\#ffffff\]:hover {
+  color: var(--color-paper) !important;
+}
+
+html.light .hover\:text-\[\#d0d6e0\]:hover {
+  color: var(--color-mist) !important;
+}
+
+html.light .bg-white\/\[0\.05\] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light input,
+html.light select {
+  background-color: var(--color-carbon) !important;
+  color: var(--color-paper) !important;
+  border-color: var(--color-graphite) !important;
+}
+
+html.light input::placeholder {
+  color: var(--color-ash) !important;
 }

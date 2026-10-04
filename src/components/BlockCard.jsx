@@ -13,12 +13,24 @@ const FILE_THEMES = [
   { bg: 'rgba(45, 212, 191, 0.08)', border: '#2dd4bf', text: '#2dd4bf', badge: 'rgba(45, 212, 191, 0.2)' },
 ];
 
-export default function BlockCard({ block, isHovered, onHover, isSeekActive }) {
+export default function BlockCard({ 
+  block, 
+  isHovered, 
+  onHover, 
+  isSeekActive, 
+  dimension = 10,
+  hoveredBlockId = null,
+  hoveredFileId = null,
+}) {
   const { id, status, fileId, type, next, pointers } = block;
 
   const isAllocated = status === 'allocated';
   const isIndex = type === 'index';
+  const isCompact = dimension >= 12 || id >= 100;
   
+  // Cross-component sync
+  const isDirectlyHovered = isHovered || hoveredBlockId === id || (hoveredFileId && hoveredFileId === fileId);
+
   // Hash fileId to get consistent theme
   let theme = null;
   if (isAllocated && fileId) {
@@ -29,49 +41,51 @@ export default function BlockCard({ block, isHovered, onHover, isSeekActive }) {
   return (
     <motion.div
       layout
-      onMouseEnter={() => onHover(fileId)}
-      onMouseLeave={() => onHover(null)}
+      onMouseEnter={() => onHover && onHover(id, fileId)}
+      onMouseLeave={() => onHover && onHover(null, null)}
       style={
         isAllocated && theme
           ? {
               backgroundColor: isSeekActive ? 'rgba(228, 242, 34, 0.2)' : theme.bg,
-              borderColor: isSeekActive ? '#e4f222' : isHovered ? '#ffffff' : theme.border,
+              borderColor: isSeekActive ? '#e4f222' : isDirectlyHovered ? '#ffffff' : theme.border,
             }
           : undefined
       }
       className={`relative flex flex-col items-center justify-center aspect-square rounded-[6px] border transition-all duration-150 cursor-pointer group ${
         !isAllocated 
-          ? 'bg-[#0f1011] border-[#23252a] text-[#62666d] hover:border-[#383b3f]' 
+          ? isDirectlyHovered 
+            ? 'bg-[#161718] border-[#ffffff] text-[#ffffff] ring-1 ring-[#ffffff]' 
+            : 'bg-[#0f1011] border-[#23252a] text-[#62666d] hover:border-[#383b3f]' 
           : 'text-[#ffffff]'
       } ${
         isSeekActive
           ? 'ring-2 ring-[#e4f222] shadow-[0_0_15px_rgba(228,242,34,0.4)] z-20 scale-105'
-          : isHovered && isAllocated
+          : isDirectlyHovered && isAllocated
           ? 'ring-1 ring-[#ffffff] shadow-[0_0_12px_rgba(255,255,255,0.2)] z-10 scale-[1.02]'
           : ''
       }`}
     >
       {/* Block Address in Monospace */}
-      <span className="text-[9px] font-mono absolute top-1 left-1.5 opacity-60 select-none">
+      <span className={`${isCompact ? 'text-[7.5px]' : 'text-[9px]'} font-mono absolute top-0.5 sm:top-1 left-1 opacity-60 select-none`}>
         {String(id).padStart(2, '0')}
       </span>
       
       {isAllocated ? (
         <div className="flex flex-col items-center justify-center w-full px-1">
           {isIndex ? (
-            <Key size={14} className="text-[#e4f222] mb-0.5" />
+            <Key size={isCompact ? 11 : 14} className="text-[#e4f222] mb-0.5" />
           ) : (
-            <File size={14} style={{ color: theme?.text }} className="mb-0.5" />
+            <File size={isCompact ? 11 : 14} style={{ color: theme?.text }} className="mb-0.5" />
           )}
           <span 
-            className="text-[9px] font-mono font-medium truncate w-full text-center px-0.5"
+            className={`${isCompact ? 'text-[7.5px]' : 'text-[9px]'} font-mono font-medium truncate w-full text-center px-0.5`}
             style={{ color: theme?.text }}
           >
             {fileId}
           </span>
         </div>
       ) : (
-        <span className="w-1.5 h-1.5 rounded-full bg-[#23252a] group-hover:bg-[#383b3f] transition-colors"></span>
+        <span className={`${isCompact ? 'w-1 h-1' : 'w-1.5 h-1.5'} rounded-full bg-[#23252a] group-hover:bg-[#383b3f] transition-colors`}></span>
       )}
 
       {/* Hover Tooltip */}
